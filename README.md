@@ -10,8 +10,7 @@ Simulação de drones realizando entregas em um mapa 2D, com obstáculos, fila d
 
 ```bash
 # 1. Clonar o repositório
-git clone https://github.com/seu-usuario/seu-projeto-drones.git
-cd seu-projeto-drones
+git clone https://github.com/anacstmoreira/Sistema-De-Entrega.git
 
 # 2. Instalar dependências (Node.js e npm)
 npm install
