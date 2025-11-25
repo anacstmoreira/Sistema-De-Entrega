@@ -1,23 +1,27 @@
 export class Entrega {
-    constructor(id, descricao, peso, destinoX, destinoY) {
+    constructor(id, descricao, peso, destinoX, destinoY, prioridade = 2) {
         this.id = id;
         this.descricao = descricao;
         this.peso = peso;
         this.destinoX = destinoX;
         this.destinoY = destinoY;
         this.status = 'pendente';
+        this.prioridade = prioridade;
+        this.tempoChegada = Date.now();
     }
     atribuirDrone(drone) {
+        if (this.drone)
+            return false;
+        // Verifica peso
         if (this.peso > drone.pesoMaximo) {
             this.status = 'rejeitada';
             this.motivoRejeicao = 'Peso excede capacidade do drone';
+            return false;
         }
-        else {
-            this.drone = drone;
-            this.status = 'pendente'; // <-- resetar status
-            this.motivoRejeicao = undefined; // <-- limpar motivo
-            drone.carregarEntrega(this.peso, this.destinoX, this.destinoY);
-        }
+        this.drone = drone;
+        this.status = 'pendente';
+        this.motivoRejeicao = undefined;
+        return true;
     }
     concluir() {
         this.status = 'concluida';

@@ -13,6 +13,37 @@
     .section { background: #fafafa; border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; }
     button { margin: 0.5rem 0; padding: 0.5rem 1rem; cursor: pointer; }
     ul { padding-left: 1.2rem; }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        }
+
+    .modal-content {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        width: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        }
+
+    .modal-content h2 {
+        margin: 0 0 1rem 0;
+        }
+
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        }
+
 </style>
 </head>
 <body>
@@ -37,6 +68,47 @@
         <div class="section"><h2>Total de Entregas Hoje</h2><p id="totalEntregas">0</p></div>
     </div>
 </main>
+
+<!-- Modal Drone -->
+<div id="modalDrone" class="modal">
+  <div class="modal-content">
+    <h2>Adicionar Drone</h2>
+    <label>Nome:</label>
+    <input type="text" id="droneNome" placeholder="Drone01">
+    <label>Peso máximo (kg):</label>
+    <input type="number" id="dronePeso" value="5" min="1">
+    <div class="modal-buttons">
+      <button id="confirmDrone">Adicionar</button>
+      <button id="cancelDrone">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Entrega -->
+<div id="modalEntrega" class="modal">
+  <div class="modal-content">
+    <h2>Adicionar Entrega</h2>
+    <label>Descrição:</label>
+    <input type="text" id="entregaDesc" placeholder="Entrega X">
+    <label>Peso (kg):</label>
+    <input type="number" id="entregaPeso" value="1" min="0.1" step="0.1">
+    <div class="modal-buttons">
+      <button id="confirmEntrega">Adicionar</button>
+      <button id="cancelEntrega">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Bem-vindo -->
+<div id="modalBemVindo" class="modal">
+  <div class="modal-content">
+    <h2>Bem-vindo!</h2>
+    <p>Bem-vindo à Simulação de Entregas com Drones. Aproveite!</p>
+    <div class="modal-buttons">
+      <button id="btnFecharBemVindo">Começar</button>
+    </div>
+  </div>
+</div>
 
 <!-- Conecta com o JS compilado na pasta dist -->
 <script type="module" src="./dist/main.js"></script>
