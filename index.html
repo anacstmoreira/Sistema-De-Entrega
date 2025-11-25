@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulação de Entregas com Drones</title>
+<style>
+    body { font-family: Arial; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+    header { background: #333; color: white; padding: 1rem; text-align: center; }
+    main { display: flex; flex: 1; }
+    #mapa { flex: 2; margin: 1rem; background: #f0f0f0; position: relative; }
+    #painel { flex: 1; margin: 1rem; display: flex; flex-direction: column; }
+    .section { background: #fafafa; border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; }
+    button { margin: 0.5rem 0; padding: 0.5rem 1rem; cursor: pointer; }
+    ul { padding-left: 1.2rem; }
+</style>
+</head>
+<body>
+
+<header><h1>Simulação de Entregas com Drones</h1></header>
+
+<main>
+    <canvas id="mapa" width="600" height="400"></canvas>
+
+    <div id="painel">
+        <div class="section">
+            <h2>Ações</h2>
+            <button id="btnAdicionarDrone">Adicionar Drone</button>
+            <button id="btnAdicionarEntrega">Adicionar Entrega</button>
+            <button id="btnIniciarSimulacao">Iniciar Simulação</button>
+            <button id="btnEncerrarSimulacao">Encerrar Simulação</button>
+        </div>
+        <div class="section"><h2>Drones Disponíveis</h2><ul id="dronesDisponiveis"></ul></div>
+        <div class="section"><h2>Entregas Pendentes</h2><ul id="entregasPendentes"></ul></div>
+        <div class="section"><h2>Entregas Concluídas</h2><ul id="entregasConcluidas"></ul></div>
+        <div class="section"><h2>Entregas Rejeitadas</h2><ul id="entregasRejeitadas"></ul></div>
+        <div class="section"><h2>Total de Entregas Hoje</h2><p id="totalEntregas">0</p></div>
+    </div>
+</main>
+
+<!-- Conecta com o JS compilado na pasta dist -->
+<script type="module" src="./dist/main.js"></script>
+
+</body>
+</html>
