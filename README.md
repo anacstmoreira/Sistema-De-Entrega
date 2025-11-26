@@ -1,7 +1,12 @@
 # Sistema de Simulação de Drones para Entregas
 
 Simulação de drones realizando entregas em um mapa 2D, com obstáculos, fila de entregas e indicador de bateria.
-
+- Drones só pegam entregas compatíveis com seu peso máximo
+- Entregas são geradas em posições válidas do mapa (sem obstáculos)
+- Cada drone possui indicador de bateria
+- Entregas impossíveis de serem realizadas são automaticamente rejeitadas
+- Se um novo drone é criado com um limite maximo de peso, ele pegará apenas entregas novas
+- Inicialmente o projeto seria feito pelo terminal, mas achei interessante ter algo mais gráfico para melhorar a experiência de quem estivesse usando, com botões interativos e uma pagina simples, mas que serve o proposito
 ---
 
 ## Como Usar
@@ -49,8 +54,3 @@ tsc
 #├─ package.json
 #└─ tsconfig.json
 
-# 7. Observações:
-#   - Drones só pegam entregas compatíveis com seu peso máximo
-#   - Entregas são geradas em posições válidas do mapa (sem obstáculos)
-#   - Cada drone possui indicador de bateria
-#   - Entregas impossíveis de serem realizadas são automaticamente rejeitadas
