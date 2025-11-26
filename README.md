@@ -6,7 +6,7 @@ Simulação de drones realizando entregas em um mapa 2D, com obstáculos, fila d
 
 - Entregas são geradas em posições válidas do mapa, e tem prioridade e peso
 
-- Cada drone possui indicador de bateria, caso ele esteja na rota para uma entrega e chegar a 10%, automaticamente retorna pra base e segue para a entrega após recarreagar
+- Cada drone possui indicador de bateria, caso ele esteja na rota para uma entrega e chegar a 10%, automaticamente retorna pra base e segue para a entrega após recarregar
 
 - Entregas impossíveis de serem realizadas são automaticamente rejeitadas permanentemente
 
@@ -31,13 +31,12 @@ npm install
 tsc
 
 # 4. Executar o projeto
-#   - Abrindo index.html no navegador
-#   - Ou usando Live Server no VS Code
-#     (clicar com o botão direito em index.html > "Open with Live Server")
-
+Abrindo index.html no navegador
+Ou usando Live Server no VS Code
+(clicar com o botão direito em index.html > "Open with Live Server")
+     
 # 5. Interagir com a simulação no navegador:
-#   - Adicionar Drone: clica em "Adicionar Drone" e preenche nome/peso
-#   - Adicionar Entrega: clica em "Adicionar Entrega" e preenche descrição/peso
-#   - Iniciar Simulação: clica em "Iniciar Simulação" → drones começam a se mover
-#   - Encerrar Simulação: clica em "Encerrar Simulação" → pausa a simulação
-
+Adicionar Drone: clica em "Adicionar Drone" e preenche nome/peso
+Adicionar Entrega: clica em "Adicionar Entrega" e preenche descrição/peso/prioridade
+Iniciar Simulação: clica em "Iniciar Simulação" → drones começam a se mover
+Encerrar Simulação: clica em "Encerrar Simulação" → pausa a simulação
