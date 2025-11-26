@@ -1,11 +1,11 @@
 import { Drone } from '../models/drone.js';
 import { Entrega } from '../models/entrega.js';
+import { filaEntregas, alocarEntrega } from '../services/filas.js';
 
 export class Simulacao {
     drones: Drone[] = [];
     entregas: Entrega[] = [];
     private droneIdCounter = 1;
-    private entregaIdCounter = 1;
     private simulacaoAtiva = false;
     private intervalo?: number;
     BASE_X: number;
@@ -23,27 +23,16 @@ export class Simulacao {
         this.COLS = Math.floor(canvasWidth / this.GRID_SIZE);
         this.mapa = Array.from({ length: this.ROWS }, () => Array(this.COLS).fill(0));
 
-        //Geração de obstáculos
-        const densidade = 0.20; 
-
+        // Geração de obstáculos
+        const densidade = 0.25;
         for (let r = 0; r < this.ROWS; r++) {
             for (let c = 0; c < this.COLS; c++) {
-
-                // Evitar obstáculos muito perto da base
                 const baseGX = Math.floor(this.BASE_X / this.GRID_SIZE);
                 const baseGY = Math.floor(this.BASE_Y / this.GRID_SIZE);
-
-                if (Math.abs(r - baseGY) <= 2 && Math.abs(c - baseGX) <= 2) {
-                    continue;
-                }
-
-                // Gera blocos pequenos espalhados
-                if (Math.random() < densidade) {
-                    this.mapa[r][c] = 1;
-                }
+                if (Math.abs(r - baseGY) <= 2 && Math.abs(c - baseGX) <= 3) continue;
+                if (Math.random() < densidade) this.mapa[r][c] = 1;
             }
         }
-
     }
 
     adicionarDrone(nome: string, pesoMaximo: number, posX: number = this.BASE_X, posY: number = this.BASE_Y) {
@@ -52,104 +41,69 @@ export class Simulacao {
         return drone;
     }
 
-    adicionarEntrega(descricao: string, peso: number, destinoX: number, destinoY: number) {
 
-        const ajustarDestino = () => {
-            let px = destinoX;
-            let py = destinoY;
-
-            const largura = this.COLS * this.GRID_SIZE;
-            const altura = this.ROWS * this.GRID_SIZE;
-
-            while (true) {
-                const gx = Math.floor(px / this.GRID_SIZE);
-                const gy = Math.floor(py / this.GRID_SIZE);
-
-                // Se dentro do mapa e não é obstáculo → válido
-                if (
-                    gy >= 0 && gy < this.ROWS &&
-                    gx >= 0 && gx < this.COLS &&
-                    this.mapa[gy][gx] === 0
-                ) {
-                    return { x: px, y: py };
-                }
-
-                // Gera nova posição
-                px = Math.random() * largura;
-                py = Math.random() * altura;
-            }
+    adicionarEntrega(desc: string, peso: number, prioridade: number = 2) {
+        const gerarDestinoValido = () => {
+            let gx: number, gy: number;
+            do {
+                gx = Math.floor(Math.random() * this.COLS);
+                gy = Math.floor(Math.random() * this.ROWS);
+            } while (this.mapa[gy][gx] === 1);
+            return { x: gx * this.GRID_SIZE + this.GRID_SIZE/2, y: gy * this.GRID_SIZE + this.GRID_SIZE/2 };
         };
 
-        const destino = ajustarDestino();
-
+        const destino = gerarDestinoValido();
         const entrega = new Entrega(
-            this.entregaIdCounter++,
-            descricao,
-            peso,
-            destino.x,
-            destino.y
+            this.entregas.length + 1, desc, peso, destino.x, destino.y, prioridade
         );
-
         this.entregas.push(entrega);
+
+        filaEntregas.push(entrega);
+        filaEntregas.sort((a,b) => a.prioridade !== b.prioridade ? a.prioridade - b.prioridade : a.tempoChegada - b.tempoChegada);
+
         return entrega;
     }
+
 
     iniciarSimulacao() {
         if (this.simulacaoAtiva) return;
         this.simulacaoAtiva = true;
-        this.intervalo = setInterval(() => this.atualizar(), 16);
     }
 
     encerrarSimulacao() {
         this.simulacaoAtiva = false;
-        if (this.intervalo) clearInterval(this.intervalo);
     }
 
-    public atualizar() {
-
-        // Marca entregas impossíveis como rejeitadas PERMANENTEMENTE
-        for (const entrega of this.entregas.filter(e => e.status === 'pendente')) {
-            const algumDroneCapaz = this.drones.some(d => d.pesoMaximo >= entrega.peso);
-            if (!algumDroneCapaz) {
-                entrega.status = 'rejeitada';
-                entrega.motivoRejeicao = 'Peso excede capacidade do drone';
+    atualizar() {
+        // Rejeita entregas que nenhum drone pode carregar
+        for (const e of this.entregas.filter(en => en.status === 'pendente')) {
+            if (!this.drones.some(d => d.pesoMaximo >= e.peso)) {
+                e.rejeitar('Peso excede capacidade do drone');
             }
         }
 
-        // Atribui entregas aos drones disponíveis
-        for (const drone of this.drones.filter(d => d.estado === 'idle')) {
-            const entrega = this.entregas.find(
-                e => e.status === 'pendente' &&
-                !e.drone &&
-                e.peso <= drone.pesoMaximo
-            );
-
-            if (!entrega) continue;
-
-            const ok = entrega.atribuirDrone(drone);
-
-            if (ok) {
-                drone.carregarEntrega(entrega);
-                drone.calcularCaminho(entrega.destinoX, entrega.destinoY, this.GRID_SIZE, this.mapa);
-                drone.estado = 'emRota';
-            }
-        }
-
-        // Atualiza posição dos drones
         for (const drone of this.drones) {
-            const entregaConcluida = drone.atualizarPosicao(this.GRID_SIZE, this.BASE_X, this.BASE_Y, this.mapa);
-            if (entregaConcluida) {
-                entregaConcluida.status = 'concluida';
-                if (entregaConcluida.drone) entregaConcluida.drone = undefined;
+            drone.atualizarPosicao(this.GRID_SIZE, this.BASE_X, this.BASE_Y, this.mapa);
+
+            if (drone.estado === 'idle' || drone.estado === 'carregandoBateria') {
+                alocarEntrega(drone);
             }
         }
+    }
+
+    iniciarDronesEntregas() {
+        if (!this.drones.some(d => d.nome === "Drone01")) this.adicionarDrone("Drone01", 5);
+        if (!this.drones.some(d => d.nome === "Drone02")) this.adicionarDrone("Drone02", 5);
+
+        if (!this.entregas.some(e => e.descricao === "Entrega 1")) this.adicionarEntrega("Entrega 1", 1);
+        if (!this.entregas.some(e => e.descricao === "Entrega 2")) this.adicionarEntrega("Entrega 2", 1);
+        if (!this.entregas.some(e => e.descricao === "Entrega 3")) this.adicionarEntrega("Entrega 3", 1);
     }
 
 
     get estaAtiva() {
         return this.simulacaoAtiva;
     }
-
 
     getEstado() {
         return { drones: this.drones, entregas: this.entregas, mapa: this.mapa, gridSize: this.GRID_SIZE };

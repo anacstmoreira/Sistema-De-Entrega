@@ -1,37 +1,50 @@
 export class Drone {
     constructor(id, nome, pesoMaximo, posX, posY) {
         this.caminho = [];
-        this.entregaAtual = null;
+        this.entregasAtuais = [];
         this.tempoEntregaRestante = 0;
         this.caminhoIda = [];
-        this.bateria = 100;
-        this.consumoPorPixel = 0.01;
+        this.bateria = 15;
+        this.consumoPorPixel = 0.10;
+        this.tempoAntesDeCarregar = 2000; // 2s
         this.id = id;
         this.nome = nome;
         this.pesoMaximo = pesoMaximo;
         this.posX = posX;
         this.posY = posY;
         this.estado = 'idle';
-        this.cargaAtual = 0;
     }
     carregarEntrega(entrega) {
-        this.entregaAtual = entrega;
-        this.cargaAtual = entrega.peso;
-        this.destinoX = entrega.destinoX;
-        this.destinoY = entrega.destinoY;
-        this.estado = 'carregando';
-        this.tempoEntregaRestante = 2000; // 2s de espera antes de partir
+        const estavaVazio = this.entregasAtuais.length === 0;
+        this.entregasAtuais.push(entrega);
+        if (estavaVazio) {
+            // só na primeira entrega
+            this.destinoX = entrega.destinoX;
+            this.destinoY = entrega.destinoY;
+            if (this.estado === "idle") {
+                this.estado = "carregando";
+                this.tempoEntregaRestante = 2000;
+            }
+        }
     }
     concluirEntrega() {
-        if (!this.entregaAtual)
+        const entrega = this.getEntregaAtual();
+        if (!entrega)
             return null;
-        const entregaFinalizada = this.entregaAtual;
-        entregaFinalizada.status = "concluida";
-        // Transição para entregar: pausa de 2s antes de retornar
+        entrega.status = "concluida";
+        this.entregasAtuais.shift();
+        const proxima = this.entregasAtuais[0];
+        if (proxima) {
+            this.destinoX = proxima.destinoX;
+            this.destinoY = proxima.destinoY;
+        }
+        else {
+            this.destinoX = undefined;
+            this.destinoY = undefined;
+        }
         this.estado = "entregando";
         this.tempoEntregaRestante = 2000;
-        // this.entregaAtual = null; << removido daqui
-        return entregaFinalizada;
+        return entrega;
     }
     calcularCaminho(destinoX, destinoY, gridSize, mapa, retorno = false) {
         const start = { x: Math.floor(this.posX / gridSize), y: Math.floor(this.posY / gridSize) };
@@ -41,13 +54,30 @@ export class Drone {
         this.estado = retorno ? 'retornando' : 'emRota';
     }
     atualizarPosicao(gridSize, BASE_X, BASE_Y, mapa) {
-        const passo = 0.2;
-        const entregaAtual = this.entregaAtual;
-        // Retorno automático se sem bateria ou sem entrega
-        if ((this.bateria <= 0 || (!this.entregaAtual && this.estado !== "idle")) && this.estado !== "retornando") {
+        const passo = 0.4;
+        const entregaAtual = this.entregasAtuais.length > 0 ? this.entregasAtuais[0] : null;
+        if (this.bateria <= 10 && this.estado !== "retornando" && this.estado !== "carregandoBateria") {
             this.calcularCaminho(BASE_X, BASE_Y, gridSize, mapa, true);
+            this.estado = "retornando";
+            return null;
         }
-        // Carregando
+        if (this.estado === "carregandoBateria") {
+            const naBase = Math.abs(this.posX - BASE_X) < 1 && Math.abs(this.posY - BASE_Y) < 1;
+            if (!naBase)
+                return null;
+            if (this.tempoAntesDeCarregar > 0) {
+                this.tempoAntesDeCarregar -= 16; // 16ms por frame
+                return null;
+            }
+            this.bateria += 10;
+            if (this.bateria >= 100) {
+                this.bateria = 100;
+                this.estado = "idle";
+                this.tempoAntesDeCarregar = 2000;
+                this.prontoParaAlocar = true;
+            }
+            return null;
+        }
         if (this.estado === "carregando") {
             this.tempoEntregaRestante -= 16;
             if (this.tempoEntregaRestante <= 0 && entregaAtual && this.destinoX !== undefined && this.destinoY !== undefined) {
@@ -55,16 +85,19 @@ export class Drone {
             }
             return null;
         }
-        // Entregando (pausa de 2s)
         if (this.estado === "entregando") {
             this.tempoEntregaRestante -= 16;
             if (this.tempoEntregaRestante <= 0) {
-                this.calcularCaminho(BASE_X, BASE_Y, gridSize, mapa, true);
-                this.entregaAtual = null;
+                const proxima = this.getEntregaAtual();
+                if (proxima) {
+                    this.calcularCaminho(proxima.destinoX, proxima.destinoY, gridSize, mapa);
+                }
+                else {
+                    this.calcularCaminho(BASE_X, BASE_Y, gridSize, mapa, true);
+                }
             }
             return null;
         }
-        // Movimentação
         if (this.caminho.length > 0 || this.estado === "retornando") {
             let alvoX = BASE_X;
             let alvoY = BASE_Y;
@@ -89,23 +122,34 @@ export class Drone {
             this.bateria -= passo * this.consumoPorPixel;
             if (this.bateria < 0)
                 this.bateria = 0;
-            // Chegada na entrega
-            if (this.estado === "emRota" && entregaAtual && this.caminho.length === 0) {
-                this.posX = this.destinoX;
-                this.posY = this.destinoY;
-                return this.concluirEntrega();
+            if (this.estado === "emRota" && this.caminho.length === 0) {
+                const entrega = this.getEntregaAtual();
+                if (entrega) {
+                    this.posX = entrega.destinoX;
+                    this.posY = entrega.destinoY;
+                    return this.concluirEntrega();
+                }
             }
-            // Chegada na base
             if (this.estado === "retornando" && this.caminho.length === 0) {
-                this.estado = "idle";
-                this.bateria = 100;
+                // força drone exatamente na base
+                this.posX = BASE_X;
+                this.posY = BASE_Y;
+                // garante que nenhum resíduo do caminho fique
+                this.caminho = [];
+                this.estado = "carregandoBateria";
+                return null;
             }
             return null;
         }
         return null;
     }
+    getEntregaAtual() {
+        return this.entregasAtuais.length > 0 ? this.entregasAtuais[0] : null;
+    }
+    get cargaAtual() {
+        return this.entregasAtuais.reduce((sum, e) => sum + e.peso, 0);
+    }
 }
-// A* permanece igual
 function aStar(start, end, mapa) {
     const width = mapa[0].length;
     const height = mapa.length;
