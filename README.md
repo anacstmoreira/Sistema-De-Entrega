@@ -1,12 +1,19 @@
 # Sistema de Simulação de Drones para Entregas
 
-Simulação de drones realizando entregas em um mapa 2D, com obstáculos, fila de entregas e indicador de bateria.
-- Drones só pegam entregas compatíveis com seu peso máximo
-- Entregas são geradas em posições válidas do mapa (sem obstáculos)
-- Cada drone possui indicador de bateria
-- Entregas impossíveis de serem realizadas são automaticamente rejeitadas
+Simulação de drones realizando entregas em um mapa 2D, com obstáculos, fila de entregas e indicador de bateria. O projeto é feito com Typescript, utilizando canva para desenhar o mapa, obstaculos, e drones.
+
+- Drones só pegam entregas compatíveis com seu peso máximo, e sempre que esvaziarem suas entregas, irão voltar para a base para pegar mais
+
+- Entregas são geradas em posições válidas do mapa, e tem prioridade e peso
+
+- Cada drone possui indicador de bateria, caso ele esteja na rota para uma entrega e chegar a 10%, automaticamente retorna pra base e segue para a entrega após recarreagar
+
+- Entregas impossíveis de serem realizadas são automaticamente rejeitadas permanentemente
+
 - Se um novo drone é criado com um limite maximo de peso, ele pegará apenas entregas novas
-- Inicialmente o projeto seria feito pelo terminal, mas achei interessante ter algo mais gráfico para melhorar a experiência de quem estivesse usando, com botões interativos e uma pagina simples, mas que serve o proposito
+
+- Inicialmente o projeto seria feito pelo terminal, mas achei interessante ter algo mais gráfico para melhorar a experiência de quem estivesse usando, com botões interativos e uma pagina simples, mas que serve o proposito.
+
 ---
 
 ## Como Usar
@@ -33,24 +40,4 @@ tsc
 #   - Adicionar Entrega: clica em "Adicionar Entrega" e preenche descrição/peso
 #   - Iniciar Simulação: clica em "Iniciar Simulação" → drones começam a se mover
 #   - Encerrar Simulação: clica em "Encerrar Simulação" → pausa a simulação
-
-# 6. Estrutura do projeto:
-#SISTEMA DE ENTREGAS
-#├─ dist
-#│  ├─ models
-#│  │  ├─ drone.js
-#│  │  └─ entrega.js
-#│  ├─ services
-#│  │  ├─ simulacao.js
-#│  │  └─ main.js
-#├─ src
-#│  ├─ models
-#│  │  ├─ drone.ts
-#│  │  └─ entrega.ts
-#│  ├─ services
-#│  │  └─ simulacao.ts
-#│  └─ main.ts
-#├─ index.html
-#├─ package.json
-#└─ tsconfig.json
 
